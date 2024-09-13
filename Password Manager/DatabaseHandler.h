@@ -51,9 +51,9 @@ public:
 	std::vector<Account> query_credentials_by_service(std::string service);
 	std::vector<Account> query_all_credentials();
 	std::vector<Account> query_credentials_by_service_username(std::string service, std::string username);
-	void add_credential(std::string service, std::string username, std::string encrypted_password, std::string nonce_public, std::string description);
-	void edit_credential(std::string service, std::string username, std::string new_password);
-	void remove_credential(std::string service, std::string username);
+	void add_credential(std::string id, std::string service, std::string username, std::string encrypted_password, std::string nonce_public, std::string description);
+	void edit_credential(std::string id, std::string new_service, std::string new_username, std::string new_password_encryptedy, std::string new_nonce_public, std::string new_description);
+	void remove_credential(const std::string& id);
 };
 
 #endif // DATABASE_HANDLER_H

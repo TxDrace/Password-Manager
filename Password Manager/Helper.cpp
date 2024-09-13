@@ -33,3 +33,14 @@ std::unique_ptr<char[]> bin2hex(const unsigned char* bin, size_t bin_len, size_t
 	sodium_bin2hex(hex.get(), hex_len, bin, bin_len);
 	return hex;
 }
+
+std::string generateId()
+{
+	const auto now = std::chrono::system_clock::now();
+	const std::time_t t_c = std::chrono::system_clock::to_time_t(now);
+	std::tm tm = *std::localtime(&t_c);
+
+	std::ostringstream oss;
+	oss << std::put_time(&tm, "%Y%m%d%H%M%S");
+	return oss.str();
+}

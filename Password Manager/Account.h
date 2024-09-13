@@ -20,17 +20,19 @@ public:
 	Account(std::string username, std::string password, std::string service, std::string description);
 	Account(const nlohmann::json& json);
 	~Account();
+
+	std::string get_id() const;
 	std::string get_username() const;
 	std::string get_password() const;
 	std::string get_service() const;
 	std::string get_description() const;
 	std::string get_nonce_public() const;
-	std::string get_id() const;
+
+	void set_id(const std::string& id);
 	void set_username(const std::string& username);
 	void set_password(const std::string& password);
 	void set_service(const std::string& service);
 	void set_description(const std::string& description);
-	void set_id(const std::string& id);
 };
 
 

@@ -6,7 +6,6 @@
 PasswordManager::PasswordManager() : db(this->databaseName)
 {
 	try {
-		this->master_username = get_environment_variable(this->MASTER_USER_ENV);
 		this->master_password = get_environment_variable(this->MASTER_PASSWORD_ENV);
 		/*cout << "Master username: " << this->master_username << endl;
 		cout << "Master password: " << this->master_password << endl;*/
@@ -26,20 +25,12 @@ std::string PasswordManager::get_master_password() const
 	return master_password;
 }
 
-std::string PasswordManager::get_master_username() const
-{
-	return this->master_username;
-}
 
 void PasswordManager::set_master_password(const std::string& master_password)
 {
 	this->master_password = master_password;
 }
 
-void PasswordManager::set_master_user(const std::string& master_username)
-{
-	this->master_username = master_username;
-}
 
 void PasswordManager::encrypt_password(std::string password, std::string& encrypted_password, std::string& nonce_public)
 {
@@ -95,19 +86,19 @@ void PasswordManager::add_credential(std::string service, std::string username, 
 {
 	std::string encrypted_password, nonce_public;
 	encrypt_password(password, encrypted_password, nonce_public);
-	db.add_credential(service, username, encrypted_password, nonce_public, description);
+	db.add_credential(generateId(), service, username, encrypted_password, nonce_public, description);
 }
 
-void PasswordManager::edit_credential(std::string service, std::string username, std::string new_password)
+void PasswordManager::edit_credential(std::string id, std::string new_service, std::string new_username, std::string new_password, std::string new_description)
 {
 	std::string encrypted_password, nonce_public;
 	encrypt_password(new_password, encrypted_password, nonce_public);
-	db.edit_credential(service, username, encrypted_password);
+	db.edit_credential(id, new_service, new_username, encrypted_password, nonce_public, new_description);
 }
 
-void PasswordManager::remove_credential(std::string service, std::string username)
+void PasswordManager::remove_credential(std::string id)
 {
-	db.remove_credential(service, username);
+	db.remove_credential(id);
 }
 
 

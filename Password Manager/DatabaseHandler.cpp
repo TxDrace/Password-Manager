@@ -221,7 +221,7 @@ std::vector<Account> DatabaseHandler::query_credentials_by_service_username(std:
 }
 
 
-void DatabaseHandler::add_credential(std::string service, std::string username, std::string encrypted_password, std::string nonce_public, std::string description)
+void DatabaseHandler::add_credential(std::string id, std::string service, std::string username, std::string encrypted_password, std::string nonce_public, std::string description)
 {
 	try 
 	{
@@ -229,6 +229,7 @@ void DatabaseHandler::add_credential(std::string service, std::string username, 
 		mongocxx::collection collection = db[this->collection_names[idx_credentials].c_str()];
 
 		bsoncxx::document::value doc_value = make_document(
+			kvp("id", id.c_str()),
 			kvp("service", service.c_str()),
 			kvp("username", username.c_str()),
 			kvp("password", encrypted_password.c_str()),
@@ -248,17 +249,35 @@ void DatabaseHandler::add_credential(std::string service, std::string username, 
 	}
 }
 
-void DatabaseHandler::edit_credential(std::string service, std::string username, std::string new_password)
+void DatabaseHandler::edit_credential(std::string id, std::string new_service, std::string new_username, std::string new_password_encrypted, std::string new_nonce_public, std::string new_description)
 {
 	try 
 	{
 		CollectionIndex idx_credentials = CollectionIndex::CREDENTIALS;
 		mongocxx::collection collection = db[this->collection_names[idx_credentials].c_str()];
 
+		auto doc = collection.find_one(make_document(kvp("id", id.c_str())));
+		if (doc)
+		{
+			nlohmann::json json = nlohmann::json::parse(to_json(doc->view()));
+			Account acc(json);
+			new_service = new_service.empty() ? acc.get_service() : new_service;
+			new_username = new_username.empty() ? acc.get_username() : new_username;
+			size_t new_password_encrypted_size = new_password_encrypted.size();
+			new_password_encrypted = new_password_encrypted_size == 2 * crypto_aead_aegis256_ABYTES ? acc.get_password() : new_password_encrypted; // The new encrypted password is always != 0 because of the out put encrypt fuction (some ad - additional data are added)
+			new_nonce_public = new_password_encrypted_size == 2 * crypto_aead_aegis256_ABYTES ? acc.get_nonce_public() : new_nonce_public; // The nonce will alway change everytime a new encrypted password come. So, if the encrypted password is not change, check the same condition as above, then change the nonce or keep remain
+			new_description = new_description.empty() ? acc.get_description() : new_description;
+		}
+		
 		collection.update_one(
-			make_document(kvp("service", service.c_str()), kvp("username", username.c_str())),
-			make_document(kvp("$set", make_document(kvp("password", new_password.c_str())))
-			)
+			make_document(kvp("id", id.c_str())),
+			make_document(kvp("$set", make_document(
+				kvp("service", new_service.c_str()),
+				kvp("username", new_username.c_str()),
+				kvp("password", new_password_encrypted.c_str()),
+				kvp("nonce", new_nonce_public.c_str()),
+				kvp("description", new_description.c_str())
+			)))
 		);
 	}
 	catch (mongocxx::exception& e)
@@ -271,13 +290,13 @@ void DatabaseHandler::edit_credential(std::string service, std::string username,
 	}
 }
 
-void DatabaseHandler::remove_credential(std::string service, std::string username)
+void DatabaseHandler::remove_credential(const std::string& id)
 {
 	try {
 		CollectionIndex idx_credentials = CollectionIndex::CREDENTIALS;
 		mongocxx::collection collection = db[this->collection_names[idx_credentials].c_str()];
 
-		collection.delete_one(make_document(kvp("service", service.c_str()), kvp("username", username.c_str())));
+		collection.delete_one(make_document(kvp("id", id.c_str())));
 	}
 	catch (mongocxx::exception& e)
 	{

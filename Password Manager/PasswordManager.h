@@ -18,7 +18,6 @@ private:
 	const std::string MASTER_USER_ENV = "PM_MASTER_USER";
 	const int PASSWORD_GEN_LENGTH = 50;
 	std::string databaseName = "password-manager";
-	std::string master_username;
 	std::string master_password;
 	DatabaseHandler db;
 
@@ -26,9 +25,7 @@ public:
 	PasswordManager();
 	~PasswordManager();
 	std::string get_master_password() const;
-	std::string get_master_username() const;
 	void set_master_password(const std::string& master_password);
-	void set_master_user(const std::string& master_user);
 	void encrypt_password(std::string password, std::string& encrypted_password, std::string& nonce_public);
 	std::string decrypt_password(const std::string& cipher_hex_str, const std::string& nonce_public_hex);
 	// bool verify_user(std::string user);
@@ -36,8 +33,8 @@ public:
 	std::vector<Account> find_credentials_of_service(std::string service);
 	std::vector<Account> find_credentials_of_service_and_username(std::string service, std::string username);
 	void add_credential(std::string service, std::string username, std::string password, std::string description);
-	void edit_credential(std::string service, std::string username, std::string new_password);
-	void remove_credential(std::string service, std::string username);
+	void edit_credential(std::string id, std::string new_service, std::string new_username, std::string new_password, std::string new_description);
+	void remove_credential(std::string id);
 	void create_user(std::string username);
 	// std::string get_environment_variable(std::string environment_key);
 	// void change_master_password(std::string new_master_password);
