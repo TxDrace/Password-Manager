@@ -7,9 +7,9 @@
 #include <sodium.h>
 
 std::string take_password_from_user();
-void print_accounts(const std::vector<Account> &accounts);
-bool login(PasswordManager &app);
-bool login_with_system_variables(PasswordManager &app);
+void print_credentials(const std::vector<Account> &accounts);
+//bool login(PasswordManager &app);
+//bool login_with_system_variables(PasswordManager &app);
 void transform_to_lower_case(std::string &str);
 int get_account_index_from_user_input(const std::vector<Account> &accounts);
 void print_find_result(const std::string &username, const std::string &password);
@@ -20,18 +20,15 @@ void get_account_info_to_remove(PasswordManager &app, std::string &service, std:
 void remove_spaces(std::string &str);
 void ask_for_sure();
 
+
 int main(int argc, char *argv[])
 {
 	if (sodium_init() == -1) {
 		std::cerr << "Error initializing libsodium" << std::endl;
-		return 1;
+		return -1;
 	}
 
-	std::cout << "Okay!!";
-	return 0;
-
-
-	/*PasswordManager app;
+	PasswordManager app;
 	std::string tabs = "\t";
 	std::string user, master_password;
 
@@ -63,74 +60,72 @@ int main(int argc, char *argv[])
 	{
 		try
 		{
-			if (login_with_system_variables(app))
+			std::string command = argv[1];
+			if (command.find("find") != std::string::npos)
 			{
-				std::string command = argv[1];
-				if (command.find("find") != std::string::npos)
-				{
-					query_credentials(app, argc, argv);
-				}
-
-				else if (command == "add")
-				{
-					std::string service, username, password, description;
-					get_new_account_info(service, username, password, description, argc, argv);
-					transform_to_lower_case(service);
-					app.add_credential(service, username, password, description);
-					std::cout << dye::green("[SUCCESS] Credential added successfully.") << std::endl;
-				}
-
-				else if (command == "edit")
-				{
-					std::string service, username, new_password;
-					get_account_info_to_edit(app, service, username, new_password, argc, argv);
-					transform_to_lower_case(service);
-					ask_for_sure();
-					app.edit_credential(service, username, new_password);
-					std::cout << dye::green("[SUCCESS] Credential edited successfully.") << std::endl;
-				}
-
-				else if (command == "remove")
-				{
-					std::string service, username;
-					get_account_info_to_remove(app, service, username, argc, argv);
-					transform_to_lower_case(service);
-					ask_for_sure();
-					app.remove_credential(service, username);
-					std::cout << dye::green("[SUCCESS] Credential removed successfully.") << std::endl;
-				}
-
-				else if (command == "reset")
-				{
-					std::cout << "-> New master password: ";
-					std::string new_master_password;
-					std::cin >> new_master_password;
-
-					if (new_master_password.empty())
-					{
-						throw std::runtime_error("Master password cannot be empty.");
-					}
-
-					app.change_master_password(new_master_password);
-				}
-
-				else if (command == "gen")
-				{
-					std::cout << dye::green("[SUCCESS] Generated password: ") << dye::yellow(app.generate_random_password()) << std::endl;
-				}
-
-				else
-				{
-					throw std::runtime_error("Invalid command.");
-				}
+				query_credentials(app, argc, argv);
 			}
+
+			else if (command == "add")
+			{
+				std::string service, username, password, description;
+				get_new_account_info(service, username, password, description, argc, argv);
+				transform_to_lower_case(service);
+				app.add_credential(service, username, password, description);
+				std::cout << dye::green("[SUCCESS] Credential added successfully.") << std::endl;
+			}
+
+			else if (command == "edit")
+			{
+				std::string service, username, new_password;
+				get_account_info_to_edit(app, service, username, new_password, argc, argv);
+				transform_to_lower_case(service);
+				ask_for_sure();
+				app.edit_credential(service, username, new_password);
+				std::cout << dye::green("[SUCCESS] Credential edited successfully.") << std::endl;
+			}
+
+			else if (command == "remove")
+			{
+				std::string service, username;
+				get_account_info_to_remove(app, service, username, argc, argv);
+				transform_to_lower_case(service);
+				ask_for_sure();
+				app.remove_credential(service, username);
+				std::cout << dye::green("[SUCCESS] Credential removed successfully.") << std::endl;
+			}
+
+			else if (command == "reset")
+			{
+				std::cout << "-> New master password: ";
+				std::string new_master_password;
+				std::cin >> new_master_password;
+
+				if (new_master_password.empty())
+				{
+					throw std::runtime_error("Master password cannot be empty.");
+				}
+
+				// app.change_master_password(new_master_password);
+			}
+
+			else if (command == "gen")
+			{
+				std::cout << dye::green("[SUCCESS] Generated password: ") << dye::yellow(app.generate_random_password()) << std::endl;
+			}
+
+			else
+			{
+				throw std::runtime_error("Invalid command.");
+			}
+
 		}
 		catch (std::exception &e)
 		{
 			std::cout << dye::red("[ERROR] " + std::string(e.what()) + ".") << std::endl;
 		}
 	}
-	return 0;*/
+	return 0;
 }
 
 std::string take_password_from_user()
@@ -156,7 +151,7 @@ std::string take_password_from_user()
 	return ipt;
 }
 
-void print_accounts(const std::vector<Account> &accounts)
+void print_credentials(const std::vector<Account> &accounts)
 {
 	tabulate::Table credentials;
 	credentials.add_row({"Index", "Service", "Username", "Description"});
@@ -168,7 +163,8 @@ void print_accounts(const std::vector<Account> &accounts)
 	size_t i = 0;
 	for (Account account : accounts)
 	{
-		std::string index = std::to_std::string(i);
+		std::string index = std::to_string(i);
+		std::string _id = account.get_id();
 		std::string service = account.get_service();
 		std::string username = account.get_username();
 		std::string description = account.get_description();
@@ -179,56 +175,56 @@ void print_accounts(const std::vector<Account> &accounts)
 	std::cout << credentials << std::endl;
 }
 
-bool login(PasswordManager &app)
-{
-	std::string master_username, master_password;
-	do
-	{
-		std::cout << "-> Master username: ";
-		std::cin >> master_username;
-		std::cout << "-> Master password: ";
-		std::cin.ignore();
-		master_password.assign(take_password_from_user());
-		if (!master_password.empty() || !master_username.empty())
-		{
-			app.set_master_user(master_username);
-			app.set_master_password(master_password);
-			return app.verify_user(master_username);
-		}
-		else
-		{
-			std::cout << "[FAIL] Master password and username cannot be empty." << std::endl;
-			return false;
-		}
-	} while (master_password.empty());
-}
+//bool login(PasswordManager &app)
+//{
+//	std::string master_username, master_password;
+//	do
+//	{
+//		std::cout << "-> Master username: ";
+//		std::cin >> master_username;
+//		std::cout << "-> Master password: ";
+//		std::cin.ignore();
+//		master_password.assign(take_password_from_user());
+//		if (!master_password.empty() || !master_username.empty())
+//		{
+//			app.set_master_user(master_username);
+//			app.set_master_password(master_password);
+//			return app.verify_user(master_username);
+//		}
+//		else
+//		{
+//			std::cout << "[FAIL] Master password and username cannot be empty." << std::endl;
+//			return false;
+//		}
+//	} while (master_password.empty());
+//}
 
-bool login_with_system_variables(PasswordManager &app)
-{
-	std::string master_username = app.get_master_username();
-	std::string master_password = app.get_master_password();
-	if (!app.get_master_password().empty() || !master_username.empty())
-	{
-		app.set_master_user(master_username);
-		app.set_master_password(master_password);
-		std::cout << "Stay calm! I'm checking your master username & master password..." << std::endl;
-		if (!app.verify_user(master_username))
-		{
-			throw std::runtime_error("Oops! Your master username or master password is incorrect.");
-		}
-		else
-		{
-			std::cout << dye::green("[SUCCESS] Okay, welcome back!") << std::endl;
-			return true;
-		}
-	}
-	else
-	{
-		// std::cout << "[FAIL] Master password and username cannot be empty." << std::endl;
-		throw std::runtime_error("Master password and username cannot be empty.");
-	}
-	return false;
-}
+//bool login_with_system_variables(PasswordManager &app)
+//{
+//	std::string master_username = app.get_master_username();
+//	std::string master_password = app.get_master_password();
+//	if (!app.get_master_password().empty() || !master_username.empty())
+//	{
+//		app.set_master_user(master_username);
+//		app.set_master_password(master_password);
+//		std::cout << "Stay calm! I'm checking your master username & master password..." << std::endl;
+//		if (!app.verify_user(master_username))
+//		{
+//			throw std::runtime_error("Oops! Your master username or master password is incorrect.");
+//		}
+//		else
+//		{
+//			std::cout << dye::green("[SUCCESS] Okay, welcome back!") << std::endl;
+//			return true;
+//		}
+//	}
+//	else
+//	{
+//		// std::cout << "[FAIL] Master password and username cannot be empty." << std::endl;
+//		throw std::runtime_error("Master password and username cannot be empty.");
+//	}
+//	return false;
+//}
 
 void transform_to_lower_case(std::string &str)
 {
@@ -318,10 +314,10 @@ void query_credentials(PasswordManager &app, int argc, char *argv[])
 		}
 		else
 		{
-			print_accounts(accounts);
+			print_credentials(accounts);
 			int choice = get_account_index_from_user_input(accounts);
 			Account account = accounts[choice];
-			print_find_result(account.get_username(), app.decrypt_password(account.get_password()));
+			print_find_result(account.get_username(), app.decrypt_password(account.get_password(), account.get_nonce_public()));
 		}
 	}
 	else if (argc == 3) // user enter: pm find [service]
@@ -335,10 +331,10 @@ void query_credentials(PasswordManager &app, int argc, char *argv[])
 		}
 		else
 		{
-			print_accounts(accounts);
+			print_credentials(accounts);
 			int choice = get_account_index_from_user_input(accounts);
 			Account account = accounts[choice];
-			print_find_result(account.get_username(), app.decrypt_password(account.get_password()));
+			print_find_result(account.get_username(), app.decrypt_password(account.get_password(), account.get_nonce_public()));
 		}
 	}
 	else if (argc == 4) // user enter: pm find [service] [username]
@@ -346,19 +342,17 @@ void query_credentials(PasswordManager &app, int argc, char *argv[])
 		std::string service = argv[2];
 		std::string username = argv[3];
 		transform_to_lower_case(service);
-		std::vector<Account> accounts = app.find_one_credential_of_service_and_username(service, username);
+		std::vector<Account> accounts = app.find_credentials_of_service_and_username(service, username);
 		if (accounts.empty())
 		{
 			throw std::runtime_error("No accounts found for service '" + service + "' with username '" + username + "'");
 		}
-		else if (accounts.size() > 1)
+		else 
 		{
-			throw std::runtime_error("Multiple accounts found for service'" + service + "' with username '" + username + "'");
-		}
-		else if (accounts.size() == 1)
-		{
-			Account account = accounts[0];
-			print_find_result(account.get_username(), app.decrypt_password(account.get_password()));
+			print_credentials(accounts);
+			int choice = get_account_index_from_user_input(accounts);
+			Account account = accounts[choice];
+			print_find_result(account.get_username(), app.decrypt_password(account.get_password(), account.get_nonce_public()));
 		}
 	}
 }
@@ -375,7 +369,7 @@ void get_account_info_to_edit(PasswordManager &app, std::string &service, std::s
 		else
 		{
 			std::cout << std::endl;
-			print_accounts(accounts);
+			print_credentials(accounts);
 			int choice = get_account_index_from_user_input(accounts);
 			std::cout << "New password: ";
 			std::cin.ignore();
@@ -402,7 +396,7 @@ void get_account_info_to_edit(PasswordManager &app, std::string &service, std::s
 		else
 		{
 			std::cout << std::endl;
-			print_accounts(accounts);
+			print_credentials(accounts);
 			int choice = get_account_index_from_user_input(accounts);
 			std::cout << "New password: ";
 			std::cin.ignore();
@@ -414,7 +408,7 @@ void get_account_info_to_edit(PasswordManager &app, std::string &service, std::s
 	{
 		std::string service = argv[2];
 		std::string username = argv[3];
-		std::vector<Account> accounts = app.find_one_credential_of_service_and_username(service, username);
+		std::vector<Account> accounts = app.find_credentials_of_service_and_username(service, username);
 		if (accounts.empty())
 		{
 			throw std::runtime_error("No accounts found for service '" + service + "' and username '" + username + "'");
@@ -442,7 +436,7 @@ void get_account_info_to_remove(PasswordManager &app, std::string &service, std:
 		}
 		else
 		{
-			print_accounts(accounts);
+			print_credentials(accounts);
 			int choice = get_account_index_from_user_input(accounts);
 			service = accounts[choice].get_service();
 			username = accounts[choice].get_username();
@@ -458,7 +452,7 @@ void get_account_info_to_remove(PasswordManager &app, std::string &service, std:
 		}
 		else
 		{
-			print_accounts(accounts);
+			print_credentials(accounts);
 			int choice = get_account_index_from_user_input(accounts);
 			username = accounts[choice].get_username();
 		}
@@ -467,7 +461,7 @@ void get_account_info_to_remove(PasswordManager &app, std::string &service, std:
 	{
 		service = argv[2];
 		username = argv[3];
-		std::vector<Account> accounts = app.find_one_credential_of_service_and_username(service, username);
+		std::vector<Account> accounts = app.find_credentials_of_service_and_username(service, username);
 		if (accounts.empty())
 		{
 			throw std::runtime_error("No accounts found for service '" + service + "' and username '" + username + "'");

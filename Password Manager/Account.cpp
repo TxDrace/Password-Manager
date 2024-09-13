@@ -15,6 +15,7 @@ Account::Account(const nlohmann::json& json)
 	this->password = json["password"];
 	this->service = json["service"];
 	this->description = json["description"];
+	this->nonce_public_hex = json["nonce"];
 }
 
 Account::~Account()
@@ -41,6 +42,16 @@ std::string Account::get_description() const
 	return description;
 }
 
+std::string Account::get_nonce_public() const
+{
+	return nonce_public_hex;
+}
+
+std::string Account::get_id() const
+{
+	return _id;
+}
+
 void Account::set_username(const std::string& username)
 {
 	this->username = username;
@@ -59,6 +70,11 @@ void Account::set_service(const std::string& service)
 void Account::set_description(const std::string& description)
 {
 	this->description = description;
+}
+
+void Account::set_id(const std::string& id)
+{
+	this->_id = id;
 }
 
 // Path: AESEncryption.cpp

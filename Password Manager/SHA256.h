@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sodium.h>
 #include "convert.h"
+#include "Helper.h"
 
 class SHA256
 {
@@ -24,7 +25,7 @@ public:
 
     ~SHA256();
 
-    std::string hash() const;
+    std::string hash();
 };
 
 #endif // SHA256_H

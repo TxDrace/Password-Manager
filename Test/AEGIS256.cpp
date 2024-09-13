@@ -26,7 +26,7 @@ std::string AEGIS256_Encrypt::encrypt()
 	return std::string(this->cipher_hex.get());
 }
 
-std::unique_ptr<unsigned char[]> AEGIS256_Encrypt::getNoncePublic()
+std::unique_ptr<unsigned char[]> AEGIS256_Encrypt::getNoncePublic_Hex()
 {
 	std::unique_ptr<unsigned char[]> res (new unsigned char [crypto_aead_aegis256_NPUBBYTES]);
 	memcpy(res.get(), this->nonce_public.get(), crypto_aead_aegis256_NPUBBYTES);
@@ -42,8 +42,8 @@ AEGIS256_Decrypt::AEGIS256_Decrypt(const std::string& key, const std::string& ci
 	this->key = string2char<unsigned char>(key);
 	this->cipher_hex = string2char<char>(cipher_hex);
 
-	this->nonce_public.reset(new unsigned char [crypto_aead_aegis256_NPUBBYTES]);
-	memcpy(this->nonce_public.get(), nonce_public, crypto_aead_aegis256_NPUBBYTES);
+	this->nonce_public_bin.reset(new unsigned char [crypto_aead_aegis256_NPUBBYTES]);
+	memcpy(this->nonce_public_bin.get(), nonce_public, crypto_aead_aegis256_NPUBBYTES);
 
 	this->message.reset(new unsigned char[this->cipher_bin_len - crypto_aead_aegis256_ABYTES]);
 	this->cipher_bin.reset(new unsigned char[this->cipher_bin_len]);
@@ -57,6 +57,6 @@ AEGIS256_Decrypt::~AEGIS256_Decrypt()
 
 std::string AEGIS256_Decrypt::decrypt()
 {
-	crypto_aead_aegis256_decrypt(this->message.get(), &this->message_len, NULL, this->cipher_bin.get(), this->cipher_bin_len, NULL, 0, this->nonce_public.get(), this->key.get());
+	crypto_aead_aegis256_decrypt(this->message.get(), &this->message_len, NULL, this->cipher_bin.get(), this->cipher_bin_len, NULL, 0, this->nonce_public_bin.get(), this->key.get());
 	return std::string((char*) this->message.get(), this->message_len);
 }

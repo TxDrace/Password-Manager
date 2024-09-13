@@ -107,16 +107,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);SODIUM_STATIC=1;SODIUM_EXPORT=;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\vcpkg\installed\x64-windows\include\mongocxx\v_noabi;C:\vcpkg\installed\x64-windows\include\bsoncxx\v_noabi;C:\vcpkg\installed\x64-windows\include;C:\vcpkg\installed\x64-windows\lib</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
-      <AdditionalDependencies>
-      </AdditionalDependencies>
+      <AdditionalDependencies>C:\vcpkg\installed\x64-windows\lib\bson-1.0.lib;C:\vcpkg\installed\x64-windows\lib\mongoc-1.0.lib;C:\vcpkg\installed\x64-windows\lib\bsoncxx-v_noabi-rhs-md.lib;C:\vcpkg\installed\x64-windows\lib\mongocxx-v_noabi-rhs-md.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

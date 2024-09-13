@@ -9,6 +9,7 @@
 #include "DatabaseHandler.h"
 #include "Account.h"
 #include "AEGIS256.h"
+#include "Helper.h"
 
 class PasswordManager
 {
@@ -28,18 +29,18 @@ public:
 	std::string get_master_username() const;
 	void set_master_password(const std::string& master_password);
 	void set_master_user(const std::string& master_user);
-	std::string encrypt_password(std::string password);
-	std::string decrypt_password(std::string cipher_hex_str);
-	bool verify_user(std::string user);
+	void encrypt_password(std::string password, std::string& encrypted_password, std::string& nonce_public);
+	std::string decrypt_password(const std::string& cipher_hex_str, const std::string& nonce_public_hex);
+	// bool verify_user(std::string user);
 	std::vector<Account> find_all_credentials();
 	std::vector<Account> find_credentials_of_service(std::string service);
-	std::vector<Account> find_one_credential_of_service_and_username(std::string service, std::string username);
+	std::vector<Account> find_credentials_of_service_and_username(std::string service, std::string username);
 	void add_credential(std::string service, std::string username, std::string password, std::string description);
 	void edit_credential(std::string service, std::string username, std::string new_password);
 	void remove_credential(std::string service, std::string username);
 	void create_user(std::string username);
-	std::string get_environment_variable(std::string environment_key);
-	void change_master_password(std::string new_master_password);
+	// std::string get_environment_variable(std::string environment_key);
+	// void change_master_password(std::string new_master_password);
 	std::string generate_random_password();
 };
 

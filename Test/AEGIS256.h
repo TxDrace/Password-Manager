@@ -26,7 +26,7 @@ public:
 	~AEGIS256_Encrypt();
 
 	std::string encrypt();
-	std::unique_ptr<unsigned char[]> getNoncePublic();
+	std::unique_ptr<unsigned char[]> getNoncePublic_Hex();
 };
 
 
@@ -36,7 +36,7 @@ private:
 	std::unique_ptr<unsigned char[]> cipher_bin;
 	std::unique_ptr<char[]> cipher_hex;
 	std::unique_ptr<unsigned char[]> message;
-	std::unique_ptr<unsigned char[]> nonce_public;
+	std::unique_ptr<unsigned char[]> nonce_public_bin;
 	std::unique_ptr<unsigned char[]> key;
 
 
