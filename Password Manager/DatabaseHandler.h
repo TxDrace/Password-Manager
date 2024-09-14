@@ -25,7 +25,7 @@
 using bsoncxx::builder::basic::kvp;
 using bsoncxx::builder::basic::make_document;
 
-#define MONGODB_URI "MONGODB_URI_TEST"
+#define MONGODB_URI "MONGODB_URI"
 
 enum CollectionIndex { CREDENTIALS, USERS };
 
@@ -42,12 +42,7 @@ private:
 public:
 	DatabaseHandler(std::string databaseName);
 	~DatabaseHandler();
-	// std::string get_environment_variable(std::string environmentVarKey);
 	std::string to_json(bsoncxx::document::view view);
-	// std::string query_master_password_of_user(std::string username);
-	// void create_user(std::string username, std::string master_password);
-	// void edit_master_password(std::string master_username, std::string new_master_password);
-	void set_collection_name(std::string collectionName);
 	std::vector<Account> query_credentials_by_service(std::string service);
 	std::vector<Account> query_all_credentials();
 	std::vector<Account> query_credentials_by_service_username(std::string service, std::string username);

@@ -7,18 +7,21 @@
 #include <sodium.h>
 
 std::string take_password_from_user();
+void query_credentials(PasswordManager& app, int argc, char* argv[]);
+
 void print_credentials(const std::vector<Account> &accounts);
-//bool login(PasswordManager &app);
-//bool login_with_system_variables(PasswordManager &app);
-void transform_to_lower_case(std::string &str);
+void print_find_result(const std::string& username, const std::string& password);
+void print_all_services(const std::set<std::string>& service_list);
+
 int get_account_index_from_user_input(const std::vector<Account> &accounts);
-void print_find_result(const std::string &username, const std::string &password);
 void get_new_account_info(std::string &service, std::string &username, std::string &password, std::string &description, const int &argc, char *argv[]);
-void query_credentials(PasswordManager &app, int argc, char *argv[]);
 void get_account_info_to_edit(PasswordManager &app, std::string& id, std::string &new_service, std::string & new_username, std::string &new_password, std::string &new_description, const int &argc, char *argv[]);
 void get_account_info_to_remove(PasswordManager &app, std::string& id, const int &argc, char *argv[]);
+
 void remove_spaces(std::string &str);
 void ask_for_sure();
+void transform_to_lower_case(std::string& str);
+
 
 
 int main(int argc, char *argv[])
@@ -36,19 +39,18 @@ int main(int argc, char *argv[])
 
 		if (argc == 1)
 		{
-			std::cout << "Password Manager is a simple tool that allows you to store and retrieve passwords securely." << std::endl
-				<< std::endl;
+			std::cout << "Password Manager is a simple tool that allows you to store and retrieve passwords securely." << std::endl << std::endl;
 			std::cout << "Usage:" << std::endl
-				<< "  pm [command]" << std::endl
-				<< std::endl;
+				<< "  pm [command]" << std::endl<< std::endl;
 			std::cout << "Available commands: " << std::endl;
-			std::cout << "  find  " << tabs << "Find a password" << std::endl;
-			std::cout << "  add   " << tabs << "Add a password" << std::endl;
-			std::cout << "  edit  " << tabs << "Edit a password" << std::endl;
-			std::cout << "  remove" << tabs << "Remove a password" << std::endl;
-			std::cout << "  reset " << tabs << "Reset the master password" << std::endl;
-			std::cout << "  gen   " << tabs << "Generate a password" << std::endl
-				<< std::endl;
+			std::cout << "  find    " << tabs << "Find a password" << std::endl;
+			std::cout << "  add     " << tabs << "Add a password" << std::endl;
+			std::cout << "  edit    " << tabs << "Edit a password" << std::endl;
+			std::cout << "  remove  " << tabs << "Remove a password" << std::endl;
+			std::cout << "  reset   " << tabs << "Reset the master password" << std::endl;
+			std::cout << "  gen     " << tabs << "Generate a password" << std::endl; 
+			std::cout << "  list    " << tabs << "List all services" << std::endl;
+			std::cout << "  import  " << tabs << "Import credentials from a json file" << std::endl << std::endl;
 			std::cout << "Commands usage:" << std::endl;
 			std::cout << "  pm find [service] [username]" << std::endl;
 			std::cout << "  pm add [service] [username]" << std::endl;
@@ -56,11 +58,12 @@ int main(int argc, char *argv[])
 			std::cout << "  pm remove [service] [username]" << std::endl;
 			std::cout << "  pm reset" << std::endl;
 			std::cout << "  pm gen" << std::endl;
+			std::cout << "  pm list" << std::endl;
+			std::cout << "  pm import" << std::endl;
 		}
 
 		else
 		{
-
 			std::string command = argv[1];
 			if (command.find("find") != std::string::npos)
 			{
@@ -99,14 +102,16 @@ int main(int argc, char *argv[])
 			{
 				std::cout << "-> New master password: ";
 				std::string new_master_password;
-				std::cin >> new_master_password;
+				std::getline(std::cin, new_master_password);
 
 				if (new_master_password.empty())
 				{
 					throw std::runtime_error("Master password cannot be empty.");
 				}
 
-				// app.change_master_password(new_master_password);
+				app.change_master_password(new_master_password);
+				std::cout << dye::green("[SUCCESS] All credentials have been update based on the new masterpassword.") << std::endl;
+				std::cout << dye::red("[CAUTION] Update the environment variables now to avoid losing all your passwords") << std::endl;
 			}
 
 			else if (command == "gen")
@@ -114,12 +119,25 @@ int main(int argc, char *argv[])
 				std::cout << dye::green("[SUCCESS] Generated password: ") << dye::yellow(app.generate_random_password()) << std::endl;
 			}
 
+			else if (command == "list")
+			{
+				print_all_services(app.get_unique_services_list());
+				std::cout << dye::green("[SUCCESS] Import credentials successfully ") << std::endl;
+			}
+
+			else if (command == "import")
+			{
+				std::cout << "Location of the .json file: ";
+				std::string location;
+				std::getline(std::cin, location);
+				app.import_credential_data(location);
+				std::cout << dye::green("[SUCCESS] Import credentials successfully ") << std::endl;
+			}
+
 			else
 			{
 				throw std::runtime_error("Invalid command.");
 			}
-
-
 		}
 
 		return 0;
@@ -153,8 +171,8 @@ std::string take_password_from_user()
 void print_credentials(const std::vector<Account> &accounts)
 {
 	tabulate::Table credentials;
-	credentials.add_row({"Index", "ID", "Service", "Username", "Description"});
-	for (size_t i = 0; i < 5; ++i)
+	credentials.add_row({"Index", "Service", "Username", "Description"});
+	for (size_t i = 0; i < 4; ++i)
 	{
 		credentials[0][i].format().font_color(tabulate::Color::yellow).font_style({tabulate::FontStyle::bold});
 	}
@@ -163,66 +181,14 @@ void print_credentials(const std::vector<Account> &accounts)
 	for (Account account : accounts)
 	{
 		std::string index = std::to_string(i);
-		std::string id = account.get_id();
 		std::string service = account.get_service();
 		std::string username = account.get_username();
 		std::string description = account.get_description();
-		credentials.add_row({index, id, service, username, description});
+		credentials.add_row({index, service, username, description});
 		i++;
 	}
 	std::cout << credentials << std::endl;
 }
-
-//bool login(PasswordManager &app)
-//{
-//	std::string master_username, master_password;
-//	do
-//	{
-//		std::cout << "-> Master username: ";
-//		std::cin >> master_username;
-//		std::cout << "-> Master password: ";
-//		std::cin.ignore();
-//		master_password.assign(take_password_from_user());
-//		if (!master_password.empty() || !master_username.empty())
-//		{
-//			app.set_master_user(master_username);
-//			app.set_master_password(master_password);
-//			return app.verify_user(master_username);
-//		}
-//		else
-//		{
-//			std::cout << "[FAIL] Master password and username cannot be empty." << std::endl;
-//			return false;
-//		}
-//	} while (master_password.empty());
-//}
-
-//bool login_with_system_variables(PasswordManager &app)
-//{
-//	std::string master_username = app.get_master_username();
-//	std::string master_password = app.get_master_password();
-//	if (!app.get_master_password().empty() || !master_username.empty())
-//	{
-//		app.set_master_user(master_username);
-//		app.set_master_password(master_password);
-//		std::cout << "Stay calm! I'm checking your master username & master password..." << std::endl;
-//		if (!app.verify_user(master_username))
-//		{
-//			throw std::runtime_error("Oops! Your master username or master password is incorrect.");
-//		}
-//		else
-//		{
-//			std::cout << dye::green("[SUCCESS] Okay, welcome back!") << std::endl;
-//			return true;
-//		}
-//	}
-//	else
-//	{
-//		// std::cout << "[FAIL] Master password and username cannot be empty." << std::endl;
-//		throw std::runtime_error("Master password and username cannot be empty.");
-//	}
-//	return false;
-//}
 
 void transform_to_lower_case(std::string &str)
 {
@@ -264,6 +230,24 @@ void print_find_result(const std::string &username, const std::string &password)
 	std::cout << result << std::endl;
 }
 
+void print_all_services(const std::set<std::string>& service_list)
+{
+	tabulate::Table services_table;
+	services_table.add_row({ "Index", "Service" });
+	for (size_t i = 0; i < 2; ++i)
+	{
+		services_table[0][i].format().font_color(tabulate::Color::yellow);
+	}
+
+	size_t i = 0;
+	for (auto& item : service_list)
+	{
+		services_table.add_row({ std::to_string(i), item});
+		i++;
+	}
+	std::cout << services_table << std::endl;
+}
+
 void get_new_account_info(std::string &service, std::string &username, std::string &password, std::string &description, const int &argc, char *argv[])
 {
 	if (argc == 2) // user enter: pm add
@@ -275,7 +259,8 @@ void get_new_account_info(std::string &service, std::string &username, std::stri
 		std::getline(std::cin, username);
 		remove_spaces(username);
 		std::cout << "Password: ";
-		password.assign(take_password_from_user());
+		//password.assign(take_password_from_user());
+		std::getline(std::cin, password);
 		std::cout << "Description: ";
 		std::getline(std::cin, description);
 	}
@@ -286,7 +271,8 @@ void get_new_account_info(std::string &service, std::string &username, std::stri
 		std::getline(std::cin, username);
 		remove_spaces(username);
 		std::cout << "Password: ";
-		password.assign(take_password_from_user());
+		//password.assign(take_password_from_user());
+		std::getline(std::cin, password);
 		std::cout << "Description: ";
 		std::getline(std::cin, description);
 	}
@@ -295,7 +281,8 @@ void get_new_account_info(std::string &service, std::string &username, std::stri
 		service = argv[2];
 		username = argv[3];
 		std::cout << "Password: ";
-		password.assign(take_password_from_user());
+		//password.assign(take_password_from_user());
+		std::getline(std::cin, password);
 		std::cout << "Description: ";
 		std::getline(std::cin, description);
 	}
@@ -403,7 +390,8 @@ void get_account_info_to_edit(PasswordManager& app, std::string& id, std::string
 	std::cout << "New username (ENTER to ignore): ";
 	std::getline(std::cin, new_username);
 	std::cout << "New password (ENTER to ignore): ";
-	new_password.assign(take_password_from_user());
+	//new_password.assign(take_password_from_user());
+	std::getline(std::cin, new_password);
 	std::cout << "New description (ENTER to ignore): ";
 	std::getline(std::cin, new_description);
 

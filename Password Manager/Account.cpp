@@ -1,13 +1,13 @@
 #include "Account.h"
 
 
-Account::Account(std::string username, std::string password, std::string service, std::string description)
-{
-	this->username = username;
-	this->password = password;
-	this->service = service;
-	this->description = description;
-}
+//Account::Account(std::string username, std::string password, std::string service, std::string description)
+//{
+//	this->username = username;
+//	this->password = password;
+//	this->service = service;
+//	this->description = description;
+//}
 
 Account::Account(const nlohmann::json& json)
 {

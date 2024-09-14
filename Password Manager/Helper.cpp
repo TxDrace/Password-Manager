@@ -42,5 +42,43 @@ std::string generateId()
 
 	std::ostringstream oss;
 	oss << std::put_time(&tm, "%Y%m%d%H%M%S");
-	return oss.str();
+	return oss.str() + generate_random_10_digit_number();
+}
+
+
+std::string generate_random_10_digit_number() 
+{
+	// Define the range for a 10-digit number
+	const int min = 1000000000;
+	const int max = 9999999999;
+
+	// Create a random device and a random number generator
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<> dis(min, max);
+
+	// Generate the random number
+	int random_number = dis(gen);
+
+	// Convert the number to a string
+	return std::to_string(random_number);
+}
+
+std::string read_file(const std::string& file_path) 
+{
+	std::ifstream file(file_path);
+	if (!file.is_open()) {
+		throw std::runtime_error("Unable to open file");
+	}
+
+	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+	file.close();
+	return content;
+}
+
+nlohmann::json read_json_file(const std::string& file_path)
+{
+	std::string file_content = read_file(file_path);
+	nlohmann::json json_obj = nlohmann::json::parse(file_content);
+	return json_obj;
 }

@@ -7,8 +7,6 @@ PasswordManager::PasswordManager() : db(this->databaseName)
 {
 	try {
 		this->master_password = get_environment_variable(this->MASTER_PASSWORD_ENV);
-		/*cout << "Master username: " << this->master_username << endl;
-		cout << "Master password: " << this->master_password << endl;*/
 	}
 	catch (const std::exception& e) {
 		std::cerr << "[ERROR] " << e.what() << std::endl;
@@ -45,22 +43,6 @@ std::string PasswordManager::decrypt_password(const std::string& cipher_hex_str,
 	return aes.decrypt();
 }
 
-//bool PasswordManager::verify_user(std::string user)
-//{
-//	std::string master_password_from_db = db.query_master_password_of_user(user);
-//	SHA256 sha(this->master_password);
-//	std::string hashed_master_password = sha.hash();
-//	/*cout << "Original master password: " << this->master_password << endl;
-//	cout << "Master password from db: " << master_password_from_db << endl;
-//	cout << "Master password in system: " << hashed_master_password << endl;*/
-//	if (master_password_from_db.compare(hashed_master_password) != 0)
-//	{
-//		//cout << "Master password is incorrect." << endl;
-//		return false;
-//	}
-//	//cout << "Master password is correct." << endl;
-//	return true;
-//}
 
 void PasswordManager::create_user(std::string username)
 {
@@ -102,45 +84,39 @@ void PasswordManager::remove_credential(std::string id)
 }
 
 
-//std::string PasswordManager::get_environment_variable(std::string environmentVarKey)
-//{
-//	char* pBuffer = nullptr;
-//	size_t size = 0;
-//	auto key = environmentVarKey.c_str();
-//	// Use the secure version of getenv, ie. _dupenv_s to fetch environment variable.
-//	if (_dupenv_s(&pBuffer, &size, key) == 0 && pBuffer != nullptr)
-//	{
-//		std::string environmentVarValue(pBuffer);
-//		free(pBuffer);
-//		return environmentVarValue;
-//	}
-//	else
-//	{
-//		throw std::runtime_error("Environment variable not found: " + environmentVarKey);
-//	}
-//}
+void PasswordManager::change_master_password(std::string new_master_password)
+{
+	try
+	{
+		std::vector<Account> accounts = db.query_all_credentials();
+		for (Account account : accounts)
+		{
+			// Decrypt using the old master password
+			std::string decrypted_password = this->decrypt_password(account.get_password(), account.get_nonce_public());
+			
+			// If decrypted password is empty. Stop it from removing values in database. 
+			// When I run reset for the second time without updating the enviroment variable. 
+			// The decryption function above will failed cause it use old password to decrypt new cipher. 
+			// This will lead to the decrypted_password = "". If I don't stop at this step, the database will be updated with new password encrypted by an empty string
+			if (decrypted_password.empty())
+			{
+				throw std::runtime_error("Password decryption failed. Did you update the environment variable after your last master password reset?");
+			}
 
-//void PasswordManager::change_master_password(std::string new_master_password)
-//{
-//	try
-//	{
-//		std::vector<Account> accounts = db.query_all_credentials(this->master_username);
-//		for (Account account : accounts)
-//		{
-//			AESDecryption aes_decrypt(this->master_password, convert_hex_str_to_byte_str(account.get_password()));
-//			std::string decrypted_password = aes_decrypt.decrypt();
-//			//cout << "Decrypted password: " << decrypted_password << endl;
-//			AESEncryption aes_encrypt(new_master_password, decrypted_password);
-//			std::string new_encrypted_password = convert_byte_str_to_hex_str(aes_encrypt.encrypt());
-//			db.edit_credential(this->master_username, account.get_service(), account.get_username(), new_encrypted_password);
-//		}
-//		// db.edit_master_password(this->master_username, new_master_password);
-//	}
-//	catch (const std::exception& e)
-//	{
-//		throw std::runtime_error(e.what());
-//	}
-//}
+			// Encrypt using new master password
+			AEGIS256_Encrypt aegis256_encrypt(new_master_password, decrypted_password);
+			std::string new_encrypted_password = aegis256_encrypt.encrypt();
+			std::string new_nonce_public = aegis256_encrypt.getNoncePublic_Hex();
+
+			// Update database
+			db.edit_credential(account.get_id(), "", "", new_encrypted_password, new_nonce_public, "");
+		}
+	}
+	catch (const std::exception& e)
+	{
+		throw std::runtime_error(e.what());
+	}
+}
 
 
 std::string PasswordManager::generate_random_password()
@@ -180,4 +156,29 @@ std::string PasswordManager::generate_random_password()
 	std::shuffle(password.begin(), password.end(), generator);
 
 	return password;
+}
+
+void PasswordManager::import_credential_data(std::string file_path)
+{
+	nlohmann::json data_json = read_json_file(file_path);
+	for (const auto& item : data_json)
+	{
+		std::string service = item["service"];
+		std::string username = item["username"];
+		std::string password = item["password"];
+		std::string description = item["description"];
+
+		add_credential(service, username, password, description);
+	}
+}
+
+std::set<std::string> PasswordManager::get_unique_services_list()
+{
+	std::set<std::string> unique_service_values;
+	std::vector<Account> accounts = find_all_credentials();
+	for (auto& acc : accounts)
+	{
+		unique_service_values.insert(acc.get_service());
+	}
+	return unique_service_values;
 }

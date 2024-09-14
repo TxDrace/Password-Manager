@@ -6,6 +6,8 @@
 #include <iostream>
 #include <random>
 #include <algorithm>
+#include <fstream>
+#include <set>
 #include "DatabaseHandler.h"
 #include "Account.h"
 #include "AEGIS256.h"
@@ -15,7 +17,6 @@ class PasswordManager
 {
 private:
 	const std::string MASTER_PASSWORD_ENV = "PM_MASTER_PASSWORD";
-	const std::string MASTER_USER_ENV = "PM_MASTER_USER";
 	const int PASSWORD_GEN_LENGTH = 50;
 	std::string databaseName = "password-manager";
 	std::string master_password;
@@ -36,9 +37,10 @@ public:
 	void edit_credential(std::string id, std::string new_service, std::string new_username, std::string new_password, std::string new_description);
 	void remove_credential(std::string id);
 	void create_user(std::string username);
-	// std::string get_environment_variable(std::string environment_key);
-	// void change_master_password(std::string new_master_password);
+	void change_master_password(std::string new_master_password);
 	std::string generate_random_password();
+	void import_credential_data(std::string file_path);
+	std::set<std::string> get_unique_services_list();
 };
 
 #endif // PASSWORD_MANAGER_H

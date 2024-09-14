@@ -17,7 +17,7 @@ private:
 	std::string nonce_public_hex;
 
 public:
-	Account(std::string username, std::string password, std::string service, std::string description);
+	//Account(std::string username, std::string password, std::string service, std::string description);
 	Account(const nlohmann::json& json);
 	~Account();
 

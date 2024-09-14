@@ -20,23 +20,6 @@ DatabaseHandler::~DatabaseHandler()
 {
 }
 
-//std::string DatabaseHandler::get_environment_variable(std::string environmentVarKey)
-//{
-//	char* pBuffer = nullptr;
-//	size_t size = 0;
-//	auto key = environmentVarKey.c_str();
-//	// Use the secure version of getenv, ie. _dupenv_s to fetch environment variable.
-//	if (_dupenv_s(&pBuffer, &size, key) == 0 && pBuffer != nullptr)
-//	{
-//		std::string environmentVarValue(pBuffer);
-//		free(pBuffer);
-//		return environmentVarValue;
-//	}
-//	else
-//	{
-//		return "";
-//	}
-//}
 
 std::string DatabaseHandler::to_json(bsoncxx::document::view view)
 {
@@ -55,87 +38,6 @@ std::string DatabaseHandler::to_json(bsoncxx::document::view view)
 	return { result, size };
 }
 
-
-//std::string DatabaseHandler::query_master_password_of_user(std::string username)
-//{
-//	try {
-//		CollectionIndex idx_users = CollectionIndex::USERS;
-//		mongocxx::collection collection = db[this->collection_names[idx_users].c_str()];
-//
-//		auto find_result = collection.find_one(make_document(kvp("user", username.c_str())));
-//		if (find_result) {
-//			nlohmann::json json = nlohmann::json::parse(to_json(find_result->view()));
-//			return json["masterkey"].get<std::string>();
-//		}
-//	}
-//	catch (mongocxx::exception& e)
-//	{
-//		throw std::runtime_error(e.what());
-//	}
-//	catch (std::exception& e)
-//	{
-//		throw std::runtime_error(e.what());
-//	}
-//	return "";
-//}
-
-//void DatabaseHandler::create_user(std::string username, std::string master_password)
-//{
-//	try
-//	{
-//		CollectionIndex idx_users = CollectionIndex::USERS;
-//		mongocxx::collection collection = db[this->collection_names[idx_users].c_str()];
-//		SHAHashing sha(master_password);
-//		string hashed_master_password = sha.Hash_hex();
-//
-//		bsoncxx::document::value doc_value = make_document(
-//			kvp("user", username.c_str()),
-//			kvp("masterkey", hashed_master_password.c_str())
-//		);
-//
-//		collection.insert_one(doc_value.view());
-//	}
-//	catch (mongocxx::exception& e)
-//	{
-//		throw std::runtime_error(e.what());
-//	}
-//	catch (std::exception& e)
-//	{
-//		throw std::runtime_error(e.what());
-//	}
-//}
-
-//void DatabaseHandler::edit_master_password(std::string master_username, std::string new_master_password)
-//{
-//	try
-//	{
-//		CollectionIndex idx_users = CollectionIndex::USERS;
-//		mongocxx::collection collection = db[this->collection_names[idx_users].c_str()];
-//		SHA256 sha(new_master_password);
-//		std::string hashed_master_password = sha.hash();
-//
-//		collection.update_one(
-//			make_document(kvp("user", master_username.c_str())),
-//			make_document(kvp("$set", make_document(kvp("masterkey", hashed_master_password.c_str())))
-//			)
-//		);
-//	}
-//	catch (mongocxx::exception& e)
-//	{
-//		throw std::runtime_error(e.what());
-//	}
-//	catch (std::exception& e)
-//	{
-//		throw std::runtime_error(e.what());
-//	}
-//}
-
-
-void DatabaseHandler::set_collection_name(std::string collectionName)
-{
-	
-}
-
 std::vector<Account> DatabaseHandler::query_credentials_by_service(std::string service)
 {
 	std::vector<Account> accounts;
@@ -144,7 +46,9 @@ std::vector<Account> DatabaseHandler::query_credentials_by_service(std::string s
 		CollectionIndex idx_credentials = CollectionIndex::CREDENTIALS;
 		mongocxx::collection collection = db[this->collection_names[idx_credentials].c_str()];
 
-		auto cursor = collection.find(make_document(kvp("service", service.c_str())));
+		auto cursor = collection.find(make_document(
+			kvp("service", make_document(kvp("$regex", service.c_str()), kvp("$options", "i")))
+		));
 		if (cursor.begin() != cursor.end()) {
 			for (auto doc : cursor) {
 				nlohmann::json json = nlohmann::json::parse(to_json(doc));
@@ -200,7 +104,10 @@ std::vector<Account> DatabaseHandler::query_credentials_by_service_username(std:
 		CollectionIndex idx_credentials = CollectionIndex::CREDENTIALS;
 		mongocxx::collection collection = db[this->collection_names[idx_credentials].c_str()];
 
-		auto cursor = collection.find(make_document(kvp("service", service.c_str()), kvp("username", username.c_str())));
+		auto cursor = collection.find(make_document(
+			kvp("service", make_document(kvp("$regex", service.c_str()), kvp("$options", "i"))),
+			kvp("username", make_document(kvp("$regex", username.c_str()), kvp("$options", "i")))
+		));
 		if (cursor.begin() != cursor.end()) {
 			for (auto doc : cursor) {
 				nlohmann::json json = nlohmann::json::parse(to_json(doc));
