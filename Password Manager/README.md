@@ -2,87 +2,39 @@
 
 ---
 
-This is a simple command line tool for securely storing passwords. They are encrypted using the hash value of your master password and stored on mongoDB database. I created this tool for personal use, ultilize a free M0 cluster on MongoDB Atlas. To use it, you'll need to create your own project and cluster on Atlas.
+This is a simple command line tool for securely storing passwords. They are encrypted using the hash value of your master password and stored on mongoDB database. I created this tool for personal use, ultilize a free M0 cluster on MongoDB Atlas. To use it, you'll need to create your own database on MongoDB Atlas.
 
 Remember your master password! If you forget it, you will lose everything. However, your master password will be stored in your system's environment variables. Don't change it unless you reset the master password.
 
 Enjoy!
 
 ## Prerequisites
+Before downloading, make sure you have a database set up on MongoDB Atlas. If you don't, follow these steps:
 
-To successfully building the project, ensure you have the following software installed and configured on your system:
+- **Create an Account**: If you're new to MongoDB Atlas, sign up for a free account on their website.
 
-* **CMake**: A cross-platform build system generator for managing the build process C++ project.
-* **Vcpkg**: A C++ package manager that simplifies the installation of mongocxx driver.
-* **Mongocxx Driver**: The C++ driver for interacting with MongoDB, installed via vcpkg.
-* **C++ Compiler (with C++17 Support)**: A C++ compiler capable of compiling code compliant with the C++17 standard. Visual Studio is a recommended option, as it provides comprehensive C++ development tools and supports the C++17 standard out of the box.
+- **New Project**: Once you're logged in, create a new project within MongoDB Atlas.
+
+- **Free Cluster**: Within your project, create a new cluster. The M0 tier cluster is free and suitable for this application.
+
+- **Connection String**: Locate the connection string for your cluster. You'll find it in the MongoDB Atlas dashboard. Store this string as a system environment variable named `MONGODB_URI`.
+
+**Important**:
+- Ensure your database can be accessed from anywhere by adding the IP address `0.0.0.0/0` to the IP Whitelist in the Network Access tab of your cluster settings.
+- Create a new database named `password_manager` within your cluster. This is where the application will store your passwords.
 
 ## Installation
 
-#### CMake
+Now, download the latest release zip file from the release page. Extract the contents to a directory of your choice. This folder contains the `pm.exe` binary and necessary DLL files.
 
-If CMake is not already installed on your system, follow these step:
+Don't forget to add the directory path where you extracted the files to your system's PATH environment variable. This allows you to run the program from any location. You may need to restart your computer for the changes to take effect.
 
-1. Navigate the official CMake download page at [https://cmake.org/download](https://cmake.org/download/)
-2. Choose the appropriate installer for yout operating system. For Windows with 64-bit architecture, download the [`cmake-3.29.3-windows-x86_64.msi`](https://github.com/Kitware/CMake/releases/download/v3.29.3/cmake-3.29.3-windows-x86_64.msi) file.
-3. Run the downloaded installer and follow the default instruction.
+Finally, set the following environment variables. These are essential for the program to connect to your database:
 
-#### vcpkg
+- **`MONGODB_URI`**: Paste the connection string for your MongoDB Atlas cluster. You can find this in your MongoDB Atlas dashboard.
+- **`PM_MASTER_PASSWORD`**: Set a strong master password. This will be used to encrypt and protect your passwords.
 
-To install and set up vcpkg, follow these steps:
+Done! You can now use the command `pm` in your command prompt or powershell.
 
-1. Open a terminal or command prompt and navigate to your `C:/` directory. Clone the vcpkg repository from Github using the following command:
 
-   ```bash
-   cd C:/
-   git clone https://github.com/microsoft/vcpkg
-   ```
-2. Run the bootstrap scripts to prepare vcpkg for use:
 
-   ```
-   .\vcpkg\bootstrap-vcpkg.bat
-   ```
-
-**Recommendation**: I advised you to install vcpkg in the `C:/` directory to align with the default configuration in the `CMakeLists.txt` file. If you choose a different installation location, you will need to update the `VCPKG_ROOT` variable in your `CMakeLists.txt` accordingly.
-
-#### mongcxx driver
-
-Open Window Powershell and navigate to the vcpkg installation directory (assuming it was installed in `C:/vcpkg`). Ensure you have the lastest version of vcpkg by running `git pull`. Then, install the mongcxx driver.
-
-```bash
-cd C:/vcpkg
-git pull
-./vcpkg install mongo-cxx-driver
-```
-
-#### Create enviroment variables
-
-* `MONGODB_URI` : The connection string of the cluster in mongoDB Atlas of your project.
-* `PM_MASTER_USER` : The master username.
-* `PM_MASTER_PASSWORD` : The master password.
-
-#### Configure and build the project
-
-Clone this repository to your local machine using the following command:
-
-```
-git clone https://github.com/HaiTuyen/Password-Manager-CMake.git
-```
-
-Navigate the the cloned project directory and create a `build` folder.
-
-```
-cd Password-Manager-CMake
-mkdir build
-cd build
-```
-
-Use CMake to generate the build files and then build the project:
-
-```
-cmake ..
-cmake --build .
-
-```
-
-Upon successfull build, the `pm.exe` will be generated in the `build/Debug` directory. Add this dicrectory to your system's PATH environment variable. This allows you to execute the command without specifying the full path. Restart the computer if neccessary.
